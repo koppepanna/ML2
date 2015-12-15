@@ -3,17 +3,19 @@
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
+from pandas import Series
 from sklearn.cross_validation import train_test_split
 
 # dataloading
 student_data = pd.read_csv("student-data.csv")
 print "Student data read successfully!"
+
 # Note: The last column 'passed' is the target/label, all other are feature columns
 # At first devide the data
 features = student_data[student_data.columns[0:29]]
 target = student_data[student_data.columns[30]]
 
-# Exploring the Data
+#Exploring the Data
 n_students = student_data.shape[0]
 n_features = len(list(student_data.columns[:-1]))
 n_passed = len(list(target[target == 'yes']))
@@ -58,27 +60,33 @@ def preprocess_features(X):
 
     return outX
 
-X_all = preprocess_features(X_all)
 
-#targetのバイナリ化の為にいじいじ
+
+# binarize the target
 from sklearn.preprocessing import label_binarize
 
 def preprocess_target(Y):
     Y = label_binarize(Y, classes = ["no","yes"])
     Y = pd.DataFrame(Y)
     Y.columns = [target_col]
-
+    
     return Y
 
+X_all = preprocess_features(X_all)
 y_all = preprocess_target(y_all)
+y_all = pd.Series(y_all.values.flatten()) # 1-demention 
+
+print X_all.head()
 print y_all.head()
-# hereby
+print y_all.shape
+
 
 print "Processed feature columns ({}):-\n{}".format(len(X_all.columns), list(X_all.columns))
 
-# First, decide how many training vs test samples you want
+
+#First, decide how many training vs test samples you want
 num_all = student_data.shape[0]  # same as len(student_data)
-num_train = 300  # about 75% of the data
+num_train = 300 # about 75% of the data
 num_test = num_all - num_train
 
 # TODO: Then, select features (X) and corresponding labels (y) for the training and test sets
@@ -106,6 +114,8 @@ clf = DecisionTreeClassifier()
 # Fit model to training data
 train_classifier(clf, X_train, y_train)  # note: using entire training set here
 #print clf  # you can inspect the learned model by printing it
+print clf
+
 
 # Predict on training set and compute F1 score
 from sklearn.metrics import f1_score
@@ -121,40 +131,62 @@ def predict_labels(clf, features, target):
 train_f1_score = predict_labels(clf, X_train, y_train)
 print "F1 score for training set: {}".format(train_f1_score)
 
+
 # Predict on test data
 print "F1 score for test set: {}".format(predict_labels(clf, X_test, y_test))
+
 
 # Train and predict using different training set sizes
 def train_predict(clf, X_train, y_train, X_test, y_test):
     print "------------------------------------------"
-    print "Training set size: {}".format(len(X_train))
+    print "Training set size: {}".format(X_train.shape[0])
     train_classifier(clf, X_train, y_train)
     print "F1 score for training set: {}".format(predict_labels(clf, X_train, y_train))
     print "F1 score for test set: {}".format(predict_labels(clf, X_test, y_test))
 
-# gridsearch
-
-"""
-from sklearn.grid_search import GridSearchCV
-print X_all.head(3)
-print y_all.head(3)
-
-X = np.asarray(X_all)
-y = np.asarray(y_all)
-
-parameters = {'max_depth':(1,2,3,4,5,6,7,8,9,10)}
-grsrch  = GridSearchCV(clf, parameters,scoring = 'f1', cv = 3)
-grsrch.fit(X, y)
-print grsrch.grid_scores_
-clf =  grsrch.best_estimator_
-"""
-
-
-#ここまで
-
-train_predict(clf, X_train, y_train, X_test, y_test)
-# TODO: Run the helper function above for desired subsets of training data
-# Note: Keep the test set constant
+for size in [100,200,300]:
+    X_train_size = X_train.head(size)
+    y_train_size = y_train.head(size)
+    train_predict(clf, X_train_size, y_train_size, X_test, y_test)
+    
 
 # TODO: Train and predict using two other models
+# model 1 : Random Forest
+from sklearn.ensemble import RandomForestClassifier
+clf1 = RandomForestClassifier()
+print clf1
+
+for size in [100,200,300]:
+    X_train_size = X_train.head(size)
+    y_train_size = y_train.head(size)
+    train_predict(clf1, X_train_size, y_train_size, X_test, y_test)
+    
+# model 2 : Support Vector Machine
+from sklearn import svm
+clf2 = RandomForestClassifier()
+clf2 = svm.SVC()
+print clf2
+
+for size in [100,200,300]:
+    X_train_size = X_train.head(size)
+    y_train_size = y_train.head(size)
+    train_predict(clf2, X_train_size, y_train_size, X_test, y_test)
+
+
+print "----------------------------------"
+print "GRID SEARCH"
+
 # TODO: Fine-tune your model and report the best F1 score
+from sklearn.grid_search import GridSearchCV
+from sklearn.metrics import classification_report
+
+tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],'C': [1, 10, 100, 1000]}, {'kernel': ['linear'], 'C': [1, 10, 100, 1000]}]
+
+final_clf = GridSearchCV(clf2, tuned_parameters, cv=5, scoring='f1', n_jobs=-1)
+final_clf.fit(X_train, y_train)
+
+print "F1 score for test set without GridSearch): {}".format(predict_labels(clf2, X_test, y_test))
+print "F1 score for final test set with GridSearch: {}".format(predict_labels(final_clf, X_test, y_test))
+print  "best parameter:", final_clf.best_params_
+print  "best score:", final_clf.best_score_
+
