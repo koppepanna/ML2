@@ -5,18 +5,17 @@ import pandas as pd
 from pandas import DataFrame
 from sklearn.cross_validation import train_test_split
 
-# データ読み込み
+# dataloading
 student_data = pd.read_csv("student-data.csv")
 print "Student data read successfully!"
 # Note: The last column 'passed' is the target/label, all other are feature columns
-# とりあえず、データわけちゃいましょう
+# At first devide the data
 features = student_data[student_data.columns[0:29]]
 target = student_data[student_data.columns[30]]
 
 # Exploring the Data
 n_students = student_data.shape[0]
 n_features = len(list(student_data.columns[:-1]))
-# 一列の時は、列名指定が要らないんですね…
 n_passed = len(list(target[target == 'yes']))
 n_failed = len(list(target[target == 'no']))
 grad_rate = float(n_passed) / (n_passed + n_failed)
@@ -73,7 +72,7 @@ def preprocess_target(Y):
 
 y_all = preprocess_target(y_all)
 print y_all.head()
-# ここまで
+# hereby
 
 print "Processed feature columns ({}):-\n{}".format(len(X_all.columns), list(X_all.columns))
 
@@ -133,7 +132,9 @@ def train_predict(clf, X_train, y_train, X_test, y_test):
     print "F1 score for training set: {}".format(predict_labels(clf, X_train, y_train))
     print "F1 score for test set: {}".format(predict_labels(clf, X_test, y_test))
 
-#自分でちょっといじってます。
+# gridsearch
+
+"""
 from sklearn.grid_search import GridSearchCV
 print X_all.head(3)
 print y_all.head(3)
@@ -146,6 +147,8 @@ grsrch  = GridSearchCV(clf, parameters,scoring = 'f1', cv = 3)
 grsrch.fit(X, y)
 print grsrch.grid_scores_
 clf =  grsrch.best_estimator_
+"""
+
 
 #ここまで
 
