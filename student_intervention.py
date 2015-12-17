@@ -144,11 +144,13 @@ def train_predict(clf, X_train, y_train, X_test, y_test):
     print "F1 score for training set: {}".format(predict_labels(clf, X_train, y_train))
     print "F1 score for test set: {}".format(predict_labels(clf, X_test, y_test))
 
-for size in [100,200,300]:
-    X_train_size = X_train.head(size)
-    y_train_size = y_train.head(size)
-    train_predict(clf, X_train_size, y_train_size, X_test, y_test)
-    
+def training_size_changer(clf):
+    for size in [100,200,300]:
+        X_train_size = X_train.head(size)
+        y_train_size = y_train.head(size)
+        train_predict(clf, X_train_size, y_train_size, X_test, y_test)
+
+training_size_changer(clf)
 
 # TODO: Train and predict using two other models
 # model 1 : Random Forest
@@ -156,10 +158,7 @@ from sklearn.ensemble import RandomForestClassifier
 clf1 = RandomForestClassifier()
 print clf1
 
-for size in [100,200,300]:
-    X_train_size = X_train.head(size)
-    y_train_size = y_train.head(size)
-    train_predict(clf1, X_train_size, y_train_size, X_test, y_test)
+training_size_changer(clf1)
     
 # model 2 : Support Vector Machine
 from sklearn import svm
@@ -167,11 +166,7 @@ clf2 = RandomForestClassifier()
 clf2 = svm.SVC()
 print clf2
 
-for size in [100,200,300]:
-    X_train_size = X_train.head(size)
-    y_train_size = y_train.head(size)
-    train_predict(clf2, X_train_size, y_train_size, X_test, y_test)
-
+training_size_changer(clf2)
 
 print "----------------------------------"
 print "GRID SEARCH"
@@ -185,8 +180,6 @@ tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],'C': [1, 10, 100, 
 final_clf = GridSearchCV(clf2, tuned_parameters, cv=5, scoring='f1', n_jobs=-1)
 final_clf.fit(X_train, y_train)
 
-print "F1 score for test set without GridSearch): {}".format(predict_labels(clf2, X_test, y_test))
-print "F1 score for final test set with GridSearch: {}".format(predict_labels(final_clf, X_test, y_test))
+print "F1 score without GridSearch): {}".format(predict_labels(clf2, X_test, y_test))
 print  "best parameter:", final_clf.best_params_
-print  "best score:", final_clf.best_score_
-
+print  "best F1 score:", final_clf.best_score_
