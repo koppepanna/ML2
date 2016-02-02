@@ -28,7 +28,7 @@ print "Number of students who passed: {}".format(n_passed)
 print "Number of students who failed: {}".format(n_failed)
 print "Graduation rate of the class: {:.2f}%".format(grad_rate)
 
-#Preparing the Data
+# Preparing the Data
 # Extract feature (X) and target (y) columns
 feature_cols = list(student_data.columns[:-1])  # all columns but last are features
 target_col = student_data.columns[-1]  # last column is the target/label
@@ -65,7 +65,7 @@ def preprocess_features(X):
 # binarize the target
 from sklearn.preprocessing import label_binarize
 
-def preprocess_target(Y):
+def preprocess_targe(Y):
     Y = label_binarize(Y, classes = ["no","yes"])
     Y = pd.DataFrame(Y)
     Y.columns = [target_col]
